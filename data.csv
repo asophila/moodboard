@@ -1,0 +1,22 @@
+type,id,name,imageUrl,source,target,relationship
+node,1,Sebastián Piñera,https://example.com/pinera.jpg,,,
+node,2,Andrés Chadwick,https://example.com/chadwick.jpg,,,
+node,3,Felipe Larraín,https://example.com/larrain.jpg,,,
+node,4,José Antonio Kast,https://example.com/kast.jpg,,,
+node,5,Cristián Hermosilla,https://example.com/hermosilla.jpg,,,
+node,6,Empresa Nacional del Petróleo,https://example.com/enap.jpg,,,
+node,7,Banco de Chile,https://example.com/bancochile.jpg,,,
+node,8,SQM,https://example.com/sqm.jpg,,,
+node,9,Fundación Paz Ciudadana,https://example.com/pazciudadana.jpg,,,
+link,,,,1,6,Ex-Presidente / Influencia política
+link,,,,1,7,Accionista mayoritario
+link,,,,2,1,Ministro del Interior
+link,,,,2,9,Miembro del directorio
+link,,,,3,7,Asesor económico
+link,,,,3,8,Consultor externo
+link,,,,4,9,Colaborador frecuente
+link,,,,5,6,Abogado corporativo
+link,,,,5,8,Representante legal
+link,,,,6,8,Contrato de suministro
+link,,,,7,8,Financiamiento de proyectos
+link,,,,7,9,Donante principal
