@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corruption Network Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        svg { width: 100vw; height: 100vh; }
+        .node text { pointer-events: none; }
+    </style>
+</head>
+<body>
+    <script>
+    async function fetchCSVFromGitHub(url) {
+      const response = await fetch(url);
+      const csvData = await response.text();
+      return d3.csvParse(csvData);
+    }
+
+    async function createNetworkVisualization(csvUrl) {
+      const data = await fetchCSVFromGitHub(csvUrl);
+
+      const nodes = data.filter(d => d.type === 'node');
+      const links = data.filter(d => d.type === 'link');
+
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      const svg = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(200)) // Increased distance
+        .force("charge", d3.forceManyBody().strength(-500)) // Increased strength
+        .force("center", d3.forceCenter(width / 2, height / 2));
+
+      const link = svg.append("g")
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("stroke", "red")
+        .attr("stroke-width", 2);
+
+      const node = svg.append("g")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+      node.append("circle")
+        .attr("r", 30)
+        .attr("fill", "white")
+        .attr("stroke", "black")
+        .attr("stroke-width", 2);
+
+      node.append("image")
+        .attr("xlink:href", d => d.imageUrl)
+        .attr("x", -25)
+        .attr("y", -25)
+        .attr("width", 50)
+        .attr("height", 50)
+        .attr("clip-path", "circle(25px at center)");
+
+      node.append("text")
+        .text(d => d.name)
+        .attr("text-anchor", "middle")
+        .attr("y", 40);
+
+      const linkText = svg.append("g")
+        .selectAll("text")
+        .data(links)
+        .join("text")
+        .text(d => d.relationship)
+        .attr("font-size", 10)
+        .attr("text-anchor", "middle")
+        .attr("dy", 15)
+        .attr("opacity", 0);
+
+      function showConnections(d) {
+        link.attr("opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 1 : 0.1);
+        linkText.attr("opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 1 : 0)
+          .attr("x", l => (l.source.x + l.target.x) / 2)
+          .attr("y", l => (l.source.y + l.target.y) / 2);
+      }
+
+      function hideConnections() {
+        link.attr("opacity", 1);
+        linkText.attr("opacity", 0);
+      }
+
+      node.on("mouseover", (event, d) => showConnections(d))
+          .on("mouseout", hideConnections)
+          .on("click", (event, d) => {
+            event.stopPropagation();
+            showConnections(d);
+          });
+
+      svg.on("click", hideConnections);
+
+      simulation.on("tick", () => {
+        link
+          .attr("x1", d => d.source.x)
+          .attr("y1", d => d.source.y)
+          .attr("x2", d => d.target.x)
+          .attr("y2", d => d.target.y);
+
+        node
+          .attr("transform", d => `translate(${d.x},${d.y})`);
+
+        linkText
+          .attr("x", d => (d.source.x + d.target.x) / 2)
+          .attr("y", d => (d.source.y + d.target.y) / 2);
+      });
+
+      function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+
+      function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+
+      function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+    }
+
+    const csvUrl = "https://raw.githubusercontent.com/asophila/moodboard/main/data.csv";
+    createNetworkVisualization(csvUrl);
+    </script>
+</body>
+</html>
